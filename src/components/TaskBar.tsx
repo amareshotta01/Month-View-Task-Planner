@@ -40,7 +40,7 @@ export default function TaskBar({ task, leftPx, topPx, widthPx, heightPx, cellWi
 
   const [showTooltip, setShowTooltip] = useState(false)
   const [mouseX, setMouseX] = useState<number | null>(null)
-  const [overHandle, setOverHandle] = useState(false)
+  const [, setOverHandle] = useState(false)
   const [tooltipPlacement, setTooltipPlacement] = useState<"above" | "below">("above")
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({

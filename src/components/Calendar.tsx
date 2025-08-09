@@ -1,13 +1,7 @@
 "use client"
 
-import type { DragEndEvent } from '@dnd-kit/core';
-import {
-  closestCenter,
-  DndContext,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core"
+import type { DragEndEvent } from "@dnd-kit/core"
+import { closestCenter, DndContext, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
 import {
   eachDayOfInterval,
   endOfMonth,
@@ -20,16 +14,15 @@ import {
   startOfMonth,
   startOfWeek,
   addDays,
-  differenceInCalendarDays
+  differenceInCalendarDays,
 } from "date-fns"
 import { useEffect, useMemo, useRef, useState } from "react"
 import TaskBar from "./TaskBar"
 import type { Filters, Task } from "./types"
-import { CATEGORY_DOT, CATEGORY_LABELS } from "./types"
 
 type Props = {
   year: number
-  month: number // 0-11
+  month: number
   tasks: Task[]
   filters: Filters
   onMoveDays: (id: string, deltaDays: number) => void
@@ -52,14 +45,13 @@ function useMonthGrid(year: number, month: number) {
   const first = startOfMonth(new Date(year, month, 1))
   const last = endOfMonth(first)
   const gridStart = startOfWeek(first, { weekStartsOn: 0 })
-
   let gridEnd = endOfWeek(last, { weekStartsOn: 0 })
 
   const totalDays = differenceInCalendarDays(gridEnd, gridStart) + 1
   if (totalDays < 42) {
     gridEnd = addDays(gridEnd, 42 - totalDays)
   }
-  
+
   const days = eachDayOfInterval({ start: gridStart, end: gridEnd })
   const weeks = Array.from({ length: 6 }, (_, r) => days.slice(r * 7, r * 7 + 7))
   return { weeks, first }
@@ -133,7 +125,7 @@ export default function Calendar({
         const anchor = rowAnchorRefs.current[rIdx]
         if (anchor) {
           const ar = anchor.getBoundingClientRect()
-          anchors[rIdx] = ar.top - crect.top 
+          anchors[rIdx] = ar.top - crect.top
         }
       }
       if (lefts.length === 7 && colW > 0 && anchors.every((v) => Number.isFinite(v))) {
@@ -174,27 +166,6 @@ export default function Calendar({
     }
   }
 
-  const dayTaskMap = useMemo(() => {
-    const map = new Map<string, Task[]>()
-    const filtered = tasks.filter((t) => intersectsFilters(t, filters))
-    flatDays.forEach((date) => {
-      const iso = format(date, "yyyy-MM-dd")
-      const list = filtered.filter((t) => {
-        const s = parseISO(t.start)
-        const e = parseISO(t.end)
-        return s <= date && date <= e
-      })
-      list.sort((a, b) => {
-        if (a.start !== b.start) return a.start.localeCompare(b.start)
-        if (a.end !== b.end) return a.end.localeCompare(b.end)
-        return a.createdAt - b.createdAt
-      })
-      map.set(iso, list)
-    })
-    return map
-  }, [flatDays, tasks, filters])
-
-
   const segments = useMemo<Segment[]>(() => {
     const segs: Segment[] = []
     weeks.forEach((week, row) => {
@@ -227,9 +198,11 @@ export default function Calendar({
 
   const selectionBands = useMemo(() => {
     if (!selecting || geom.colWidth === 0) return []
+
     const startIdx = flatDays.findIndex((d) => isSameDay(d, parseISO(selecting.start)))
     const endIdx = flatDays.findIndex((d) => isSameDay(d, parseISO(selecting.end)))
     if (startIdx === -1 || endIdx === -1) return []
+
     const s = Math.min(startIdx, endIdx)
     const e = Math.max(startIdx, endIdx)
 
@@ -243,7 +216,6 @@ export default function Calendar({
     const days = Math.abs(differenceInCalendarDays(eDate, sDate)) + 1
     const rangeLabel = `${format(sDate, "MMM d")} to ${format(eDate, "MMM d")} (${days}d)`
 
-
     const bands: { row: number; startCol: number; endCol: number }[] = []
     const startRow = Math.floor(s / 7)
     const endRow = Math.floor(e / 7)
@@ -252,6 +224,7 @@ export default function Calendar({
       const rowEndCol = row === endRow ? e % 7 : 6
       bands.push({ row, startCol: rowStartCol, endCol: rowEndCol })
     }
+
     return bands.map((b) => {
       const leftStart = geom.colLefts[b.startCol] ?? 0
       const rightEnd = (geom.colLefts[b.endCol] ?? 0) + geom.colWidth
@@ -268,11 +241,10 @@ export default function Calendar({
       while (occupied.has(laneForSelection)) laneForSelection++
 
       const top = topBase + laneForSelection * (laneH + 4)
-
-
       const width = Math.max(0, rightEnd - leftStart - pad * 2)
       const height = laneH
-      return { key: `sel-${b.row}-${b.startCol}-${b.endCol}`, left, top, width, height, label:rangeLabel }
+
+      return { key: `sel-${b.row}-${b.startCol}-${b.endCol}`, left, top, width, height, label: rangeLabel }
     })
   }, [selecting, geom, flatDays, segments])
 
@@ -315,10 +287,7 @@ export default function Calendar({
                   Today
                 </button>
               )}
-              <button
-                className="rounded-md border px-3 py-1 text-sm hover:bg-gray-50"
-                onClick={() => onMonthChange(1)}
-              >
+              <button className="rounded-md border px-3 py-1 text-sm hover:bg-gray-50" onClick={() => onMonthChange(1)}>
                 Next
               </button>
             </>
@@ -344,20 +313,13 @@ export default function Calendar({
               const today = isToday(date)
 
               const idx = row * 7 + col
-              const isInDrag =
-                selecting && parseISO(selecting.start) <= date && date <= parseISO(selecting.end)
+              const isInDrag = selecting && parseISO(selecting.start) <= date && date <= parseISO(selecting.end)
 
               const baseBg = outside ? "bg-gray-50/50" : "bg-white"
               let bgClass = baseBg
               if (isInDrag) bgClass = "bg-sky-50"
               if (today) bgClass = "bg-emerald-200"
 
-              const dayISO = format(date, "yyyy-MM-dd")
-              const list = dayTaskMap.get(dayISO) ?? []
-              const overflow = list.length > 3
-              const firstTwo = overflow ? list.slice(0, 2) : []
-
-              
               return (
                 <div
                   key={date.toISOString()}
@@ -378,15 +340,17 @@ export default function Calendar({
                   >
                     <div className={`text-xs ${outside ? "text-gray-400" : "text-gray-700"}`}>
                       {today ? (
-                        <b><span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[11px] font-semibold text-white">
-                          {format(date, "d")}
-                        </span></b>
+                        <b>
+                          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[11px] font-semibold text-white">
+                            {format(date, "d")}
+                          </span>
+                        </b>
                       ) : (
-                        <b><span>{format(date, "d")}</span></b>
+                        <b>
+                          <span>{format(date, "d")}</span>
+                        </b>
                       )}
                     </div>
-
-                    
                   </div>
 
                   {col === 0 && (
@@ -399,7 +363,7 @@ export default function Calendar({
                   )}
                 </div>
               )
-            })
+            }),
           )}
 
           {selectionBands.map((b) => (

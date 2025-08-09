@@ -32,7 +32,6 @@ export default function FilterPanel({
   persist,
   onTogglePersist,
 }: Props) {
-  const currentIndex = TIME_WINDOWS.findIndex((t) => t.value === filters.timeWindow)
 
   const handleKey = useCallback(
     (e: React.KeyboardEvent<HTMLButtonElement>, idx: number) => {
