@@ -1,6 +1,6 @@
 # Month View Task Planner
 
-###Live Link: https://month-view-task-planner.vercel.app/
+### Live Link: https://month-view-task-planner.vercel.app/
 
 Month View Task Planner is a responsive, interactive, single-page application built with React and TypeScript. It provides a full-month calendar view for creating, managing, and visualizing tasks over time. Users can drag to create tasks, drag to move them, and resize their duration, all within an intuitive and clean interface.
 
